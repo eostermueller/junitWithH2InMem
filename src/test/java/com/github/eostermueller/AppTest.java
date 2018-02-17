@@ -3,10 +3,12 @@ package com.github.eostermueller;
 import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -36,8 +38,9 @@ public class AppTest
 		 conn.createStatement().executeUpdate("CREATE TABLE data ("
 		   +" key VARCHAR(255) PRIMARY KEY,"
 		   +" value VARCHAR(1023) )");
-		 conn.createStatement().executeUpdate("INSERT INTO DATA values ('foo', 'bar')");
 		 conn.createStatement().executeUpdate("INSERT INTO DATA values ('hello', 'world')");
+		 conn.createStatement().executeUpdate("INSERT INTO DATA values ('billy', 'bob')");
+		 conn.createStatement().executeUpdate("INSERT INTO DATA values ('foo', 'bar')");
 	}
 	
 	@Test
@@ -59,6 +62,22 @@ public class AppTest
 		
 		getDataSource().getConnection().close();
 	}
+	@Test
+	public void querySingleRecordWithMetaData() throws SQLException {
+		Connection conn = getDataSource().getConnection();
+		StringBuilder sb = new StringBuilder();
+		try (
+			PreparedStatement stmt = conn.prepareStatement("SELECT key, value from data where key='foo'");
+			ResultSet rs = stmt.executeQuery()) {
+			while (rs != null && rs.next()) {
+				ResultSetMetaData rsmd = rs.getMetaData();
+				sb.append(rsmd.getColumnName(1) + " = " +  rs.getString(1) + "  " );
+				sb.append(rsmd.getColumnName(2) + " = " +  rs.getString(2) + "\n");
+			}
+			System.out.println(sb.toString());
+		}
+	}
+	
 	@Test
 	public void querySingleRecord() throws SQLException {
 		Connection conn = getDataSource().getConnection();
