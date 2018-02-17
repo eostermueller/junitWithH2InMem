@@ -3,10 +3,13 @@ package com.github.eostermueller;
 import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -37,7 +40,23 @@ public class AppTest
 		 conn.createStatement().executeUpdate("INSERT INTO DATA values ('hello', 'world')");
 	}
 	
+	@Test
+	public void canLocateRegisteredJdbcDriver() {
+		int driverCount = 0;
+        Driver driver = null;
+        Enumeration<Driver> drivers = DriverManager.getDrivers();
+        while (drivers.hasMoreElements()) {
+            driver = drivers.nextElement();
+            driverCount++;
+        }
+        assertEquals("Should have found just 1 JDBC driver, the H2 one that we just exercised",1, driverCount);
+        assertEquals("Could not find the H2 JDBC driver that we just exercised","org.h2.Driver", driver.getClass().getName());
+		
+	}
+
+	
 	@AfterClass public static void shutdownDb() throws SQLException {
+		
 		getDataSource().getConnection().close();
 	}
 	@Test
